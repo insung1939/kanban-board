@@ -20,3 +20,26 @@ npm i styled-reset
 *3. 불필요한 파일 및 소스코드 삭제*
 
 *4. App.tsx, index.tsx 전체적인 틀 잡기 작업*
+
+
+<br/>
+<br/>
+
+## 커밋2: 리스트 추가 버튼 작업 및 상태관리 recoil setting
+----
+*1. mui 설치: icon*
+```
+npm install @mui/material @emotion/react @emotion/styled
+npm install @mui/icons-material
+```
+
+*2. 상태관리 recoil 라이브러리 setting*
+```
+npm install recoil
+```
+
+*3. 리스트 추가 버튼 작업*
+
+*4. 리스트 컴포넌트 생성*
+
+
