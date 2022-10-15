@@ -1,32 +1,29 @@
-// src/recoil/todo.ts
 import { atom } from "recoil";
+import { recoilPersist } from "recoil-persist";
 
-export interface IListState {
-  id: string;
-  title: string;
-  contents: string[];
+export interface IContentState {
+  id: number;
+  content: string;
 }
 
-// 리스트의 타이틀 값 input으로 받음
-export const inputList = atom<string>({
-  key: "inputList",
-  default: "",
-});
+export interface IListState {
+  id: number;
+  title: string;
+  contents: IContentState[];
+}
 
-//리스트의 카드 input을 받음
-export const inputCardContent = atom<string>({
-  key: "inputCardContent",
-  default: "",
-});
+//새로고침 후에도 데이터 남이있게 함
+const { persistAtom } = recoilPersist();
 
 // 업데이트 시킬 listState 배열
 export const listState = atom<IListState[]>({
-  key: "list",
+  key: "listState",
   default: [
     {
-      id: "1",
+      id: 1,
       title: "Insung",
-      contents: ["hello", "i am insung"],
+      contents: [],
     },
   ],
+  effects_UNSTABLE: [persistAtom],
 });

@@ -42,4 +42,21 @@ npm install recoil
 
 *4. 리스트 컴포넌트 생성*
 
+## 커밋2: 리스트 추가 버튼 작업 및 상태관리 recoil setting
+----
+*1. recoil-persist 설치: 새로고침 해도 데이터 남아있게 관리*
+```
+npm install recoil-persist
+```
+
+*2. 컴포넌트 폴더 구조 잡기: List, Card, ListCreator 컴포넌트 생성*
+
+*3. 전체적인 css 스타일링 작업*
+
+
+
+
+
+
+
 
