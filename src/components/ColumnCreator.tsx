@@ -7,72 +7,67 @@ import { color } from "../styles/theme";
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
 import IconButton from "@mui/material/IconButton";
-//recoil
-import { useSetRecoilState } from "recoil";
-import { listState } from "../recoil/atoms/listState";
 
-export default function ListCreator() {
-  const createList = useSetRecoilState(listState);
-  const [listTitle, setListTitle] = useState<string>("");
-  const [addListMode, setAddListMode] = useState<boolean>(false);
-  //list title input handling
-  const handleListTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setListTitle(e.target.value);
-    console.log(listTitle);
+interface IColumnCreatorProps {
+  createColumn: (title: string, id: number) => void;
+}
+
+export default function ColumnCreator({ createColumn }: IColumnCreatorProps) {
+  const [columnTitle, setColumnTitle] = useState<string>("");
+  const [addColumnMode, setAddColumnMode] = useState<boolean>(false);
+  //컬럼 title input handling
+  const handleColumnTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setColumnTitle(e.target.value);
   };
-  //addList 모드 변경
-  const handleAddListMode = () => {
-    setAddListMode(true);
+  //컬럼 추가 모드 변경
+  const handleAddColumnMode = () => {
+    setAddColumnMode(true);
   };
-  //리스트 추가하는 것을 취소
-  const handleCancelAddList = () => {
-    setAddListMode(false);
+  //컬럼 추가하는 것을 취소
+  const cancelAddColumn = () => {
+    setAddColumnMode(false);
   };
-  //리스트 추가
-  const handleAddList = () => {
-    const today = new Date();
-    const newList = {
-      id: today.getTime(),
-      title: listTitle,
-      contents: [],
-    };
-    createList((list) => [...list, newList]);
-    setAddListMode(false);
+  //컬럼 추가
+  const handleAddColumn = () => {
+    const id = new Date().getTime();
+    createColumn(columnTitle, id);
+    setAddColumnMode(false);
+    setColumnTitle("");
   };
 
   const handleEnterInput = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.code === "Enter") {
-      handleAddList();
+      handleAddColumn();
     }
   };
   return (
     <>
-      {addListMode ? (
-        <ActiveAddList>
-          <ListTitleInput
+      {addColumnMode ? (
+        <ActiveAddColumn>
+          <ColumnTitleInput
             type="text"
-            placeholder="타이틀 입력..."
-            onChange={handleListTitle}
+            placeholder="제목 입력..."
+            onChange={handleColumnTitle}
             onKeyDown={handleEnterInput}
           />
           <div style={{ display: "flex" }}>
-            <AddListButton onClick={handleAddList}>추가</AddListButton>
-            <IconButton onClick={handleCancelAddList} sx={{ padding: 0 }}>
+            <AddColumnButton onClick={handleAddColumn}>추가</AddColumnButton>
+            <IconButton onClick={cancelAddColumn} sx={{ padding: 0 }}>
               <ClearIcon />
             </IconButton>
           </div>
-        </ActiveAddList>
+        </ActiveAddColumn>
       ) : (
-        <InactiveAddList onClick={handleAddListMode}>
+        <InactiveAddColumn onClick={handleAddColumnMode}>
           <AddIcon /> 리스트 추가
-        </InactiveAddList>
+        </InactiveAddColumn>
       )}
     </>
   );
 }
 
 //style
-const InactiveAddList = styled.div`
+const InactiveAddColumn = styled.div`
   flex: 0 0 auto;
   width: 17%;
   height: 24px;
@@ -91,7 +86,7 @@ const InactiveAddList = styled.div`
   cursor: pointer;
 `;
 
-const ActiveAddList = styled.div`
+const ActiveAddColumn = styled.div`
   flex: 0 0 auto;
   width: 17%;
   padding: 10px;
@@ -101,8 +96,8 @@ const ActiveAddList = styled.div`
   height: fit-content;
 `;
 
-const ListTitleInput = styled.input`
-  border: 1px solid ${color.primary};
+const ColumnTitleInput = styled.input`
+  border: none;
   width: 90%;
   border-radius: 5px;
   margin-bottom: 5px;
@@ -118,7 +113,7 @@ const ListTitleInput = styled.input`
   }
 `;
 
-const AddListButton = styled.button`
+const AddColumnButton = styled.button`
   width: 20%;
   padding: 5px;
   height: 24px;

@@ -42,7 +42,7 @@ npm install recoil
 
 *4. 리스트 컴포넌트 생성*
 
-## 커밋2: 리스트 추가 버튼 작업 및 상태관리 recoil setting
+## 커밋3: 컴포넌트 폴더구조 잡기 및 전체적인 스타일링 작업
 ----
 *1. recoil-persist 설치: 새로고침 해도 데이터 남아있게 관리*
 ```
@@ -53,7 +53,13 @@ npm install recoil-persist
 
 *3. 전체적인 css 스타일링 작업*
 
+## 커밋3: 컴포넌트 폴더구조 잡기 및 전체적인 스타일링 작업
+----
+*1. recoil 상태관리: atom family로 변경*
 
+*2. 컴포넌트 폴더구조 및 네이밍 재변경: Column, ColumnCreator, Item*
+
+*3. 칸반 컬럼 생성, 제목 수정, 삭제 기능 추가, 컬럼 간 드래그 기능 추가*
 
 
 
