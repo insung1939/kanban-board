@@ -1,3 +1,4 @@
+import { useState } from "react";
 //style
 import styled from "styled-components";
 import { color } from "../styles/theme";
@@ -6,10 +7,16 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
 import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
-import { useState } from "react";
+import ClearIcon from "@mui/icons-material/Clear";
 //recoil
 import { useRecoilState } from "recoil";
-import { columnIds, columnState, IColumnState } from "../recoil/atoms/kanban";
+import {
+  columnIds,
+  columnState,
+  IColumnState,
+  IItem,
+} from "../recoil/atoms/kanban";
+//components
 import Item from "./Item";
 
 interface IColumnProps {
@@ -23,11 +30,65 @@ export default function Column(props: IColumnProps) {
   //state
   const [column, setColumn] = useRecoilState<IColumnState>(columnState(id));
   const [idList, setIdList] = useRecoilState<number[]>(columnIds);
+  const [dragId, setDragId] = useState<number>(0);
+  const [dragColumn, setDragColumn] = useRecoilState(columnState(1));
   //column title
   const [title, setTitle] = useState<string>(column.title);
+  //item add mode
+  const [showAddInput, setShowAddInput] = useState<boolean>(false);
+  //new item input
+  const [newItem, setNewItem] = useState<string>("");
+
+  const handleCreateItem = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewItem(e.target.value);
+  };
+
+  const cancelNewItem = () => {
+    setShowAddInput(false);
+  };
+
+  //컬럼 아이템 수정
+  const editItem = (id: number, text: string) => {
+    if (text.length < 1) {
+      alert("1자 이상 수정해야 합니다");
+    } else {
+      const index = column.content.findIndex((el) => {
+        return el.id === id;
+      });
+      const editedContent = [
+        ...column.content.slice(0, index),
+        { id: id, text: text },
+        ...column.content.slice(index + 1),
+      ];
+      setColumn({ ...column, content: editedContent });
+      alert("수정되었습니다!");
+    }
+  };
+
+  //컬럼 아이템 삭제
+  const deleteItem = (id: number) => {
+    const editedContent = column.content.filter((el) => el.id !== id);
+    setColumn({ ...column, content: editedContent });
+  };
+
+  //컬럼 아이템 추가
+  const saveNewItem = () => {
+    if (newItem.length > 0) {
+      const newItemData = {
+        id: new Date().getTime(),
+        text: newItem,
+      };
+      setColumn({ ...column, content: [...column.content, newItemData] });
+      setShowAddInput(false);
+      setNewItem("");
+    } else {
+      alert("최소 1자 이상 입력해야 합니다!");
+    }
+  };
 
   //컬럼 삭제
   const handleDeleteColumn = (id: number) => {
+    console.log("id", id);
     deleteColumn(id);
   };
 
@@ -43,18 +104,10 @@ export default function Column(props: IColumnProps) {
     alert("제목이 저장되었습니다!");
   };
 
-  //컬럼 아이템 추가
-  const handleAddItem = () => {
-    const newItem = {
-      id: new Date().getTime(),
-      text: "",
-    };
-    setColumn({ ...column, content: [...column.content, newItem] });
-  };
-
   //컬럼 드래그 시작
   const handleDragStart = (e: React.DragEvent<HTMLInputElement>) => {
     e.dataTransfer.setData("start", String(id));
+    console.log("column drag start");
   };
 
   //컬럼 드래그 중
@@ -67,21 +120,58 @@ export default function Column(props: IColumnProps) {
     const startId = Number(e.dataTransfer.getData("start"));
     console.log("id!!!", startId, id);
     const endId = id;
-    setIdList(changeOrder(findIndex(startId), findIndex(endId)));
+    setIdList(changeOrder(findIndex(startId), findIndex(endId), idList));
   };
 
-  //드래그 드롭 후 컬럼 위치 변경 함수
-  const changeOrder = (start: number, end: number) => {
-    let _idList = [...idList];
-    let tmp = _idList[end];
-    _idList[end] = _idList[start];
-    _idList[start] = tmp;
-    return _idList;
+  //드래그 드롭 후 위치 변경 함수
+  const changeOrder = (start: number, end: number, array: any) => {
+    let _array = [...array];
+    let tmp = _array[end];
+    _array[end] = _array[start];
+    _array[start] = tmp;
+    return _array;
   };
 
   //id를 가지고 배열의 index를 찾는 함수
   const findIndex = (id: number) => {
     return idList.indexOf(id);
+  };
+
+  //같은 컬럼 내 아이템 위치 변경
+  const moveItemInSameColumn = (
+    startItemIndex: number,
+    endItemIndex: number
+  ) => {
+    setColumn({
+      ...column,
+      content: changeOrder(startItemIndex, endItemIndex, column.content),
+    });
+  };
+
+  //다른 컬럼으로 아이템 이동
+  const moveItemToDifferentColumn = (
+    startColumnId: number,
+    startItemIndex: number,
+    endItemIndex: number
+  ) => {
+    console.log("startItem", startColumnId, startItemIndex, endItemIndex);
+    setDragId(startColumnId);
+    handleDragItemChange();
+    console.log("dragId", startColumnId);
+
+    console.log("startColumn", dragColumn);
+    // setColumn({
+    //   ...column,
+    //   content: [
+    //     ...column.content.slice(0, endItemIndex),
+    //     startItem,
+    //     ...column.content.slice(endItemIndex),
+    //   ],
+    // });
+  };
+
+  const handleDragItemChange = () => {
+    console.log("dragId!!", dragId);
   };
 
   return (
@@ -98,11 +188,30 @@ export default function Column(props: IColumnProps) {
         </IconButton>
       </AlignStyle>
       {column.content.map((element) => (
-        <Item key={element.id} contentData={element} id={id} />
+        <Item
+          key={element.id}
+          contentData={element}
+          id={id}
+          deleteItem={deleteItem}
+          editItem={editItem}
+          moveItemInSameColumn={moveItemInSameColumn}
+          moveItemToDifferentColumn={moveItemToDifferentColumn}
+        />
       ))}
+      {showAddInput && (
+        <CreateItemBox>
+          <CreateItem onChange={handleCreateItem} />
+          <IconButton onClick={cancelNewItem} sx={{ padding: "0 5px" }}>
+            <ClearIcon />
+          </IconButton>
+          <IconButton onClick={saveNewItem} sx={{ padding: "0 5px" }}>
+            <SaveIcon />
+          </IconButton>
+        </CreateItemBox>
+      )}
       <AlignStyle>
         <IconButton
-          onClick={handleAddItem}
+          onClick={() => setShowAddInput(true)}
           sx={{ padding: "0 5px", marginTop: "10px" }}
         >
           <AddIcon />
@@ -146,4 +255,24 @@ const ColumnTitle = styled.input`
 const AlignStyle = styled.div`
   display: flex;
   justify-content: space-between;
+`;
+
+const CreateItemBox = styled.div`
+  border-radius: 5px;
+  margin-top: 10px;
+  display: flex;
+  background: ${color.white};
+  border: 2px solid ${color.primary};
+`;
+
+const CreateItem = styled.input`
+  border-radius: 5px;
+  width: 90%;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px;
+  &:focus-visible {
+    outline: none;
+  }
 `;

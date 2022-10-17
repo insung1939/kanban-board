@@ -8,6 +8,8 @@ import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
 import IconButton from "@mui/material/IconButton";
 
+// ---------------------------------------------------------------------
+
 interface IColumnCreatorProps {
   createColumn: (title: string, id: number) => void;
 }

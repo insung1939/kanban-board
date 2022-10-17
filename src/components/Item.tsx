@@ -1,90 +1,115 @@
-//style
 import { useState } from "react";
+//style
 import styled from "styled-components";
 import { color } from "../styles/theme";
+//mui
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { columnState, IColumnState, IItem } from "../recoil/atoms/kanban";
+//recoil
+import {
+  columnIds,
+  IColumnState,
+  IItem,
+  columnState,
+} from "../recoil/atoms/kanban";
 import { useRecoilState } from "recoil";
 
+// ---------------------------------------------------------------------
 interface IItemProps {
   contentData: IItem;
   id: number;
+  deleteItem: (id: number) => void;
+  editItem: (id: number, text: string) => void;
+  moveItemInSameColumn: (startItemIndex: number, endItemIndex: number) => void;
+  moveItemToDifferentColumn: (
+    startColumnId: number,
+    stratItemIndex: number,
+    endItemIndex: number
+  ) => void;
 }
 
 interface ItemContentProps {
   isFocus: boolean;
 }
 
-export default function Item({ contentData, id }: IItemProps) {
-  //state
-  const [column, setColumn] = useRecoilState<IColumnState>(columnState(id));
-  const [isShow, setIsShow] = useState<boolean>(false);
-  const [contents, setContents] = useState<IItem[]>(column.content);
+export default function Item(props: IItemProps) {
+  const {
+    contentData,
+    id,
+    deleteItem,
+    editItem,
+    moveItemInSameColumn,
+    moveItemToDifferentColumn,
+  } = props;
+  const [isFocus, setIsFocus] = useState<boolean>(false);
   const [item, setItem] = useState<string>(contentData.text);
-
-  const deleteItem = (id: number) => {
-    setContents((contents) => contents.filter((el) => el.id !== id));
-    setColumn({ ...column, content: contents });
-  };
-
-  //const detailContent = column[itemIndex].content;
-
+  const [column] = useRecoilState<IColumnState>(columnState(id));
   const handleItemInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setItem(e.target.value);
-    // const cardContent = {
-    //   id: today.getTime(),
-    //   content: e.target.value,
-    // };
-  };
-  const handleDragStart = (e: React.DragEvent<HTMLInputElement>) => {
-    // e.dataTransfer.setData(
-    //   "startContent",
-    //   String(detailContent.indexOf(content))
-    // );
   };
 
+  //아이템 드래그 시작
+  const handleDragStart = (e: React.DragEvent<HTMLInputElement>) => {
+    e.dataTransfer.setData("startColumnId", String(id));
+    e.dataTransfer.setData("startItemId", GetItemIndex());
+    e.stopPropagation();
+    console.log("item drag start");
+  };
+
+  //아이템 드래그 중
   const handleDragOver = (e: React.DragEvent<HTMLInputElement>) => {
     e.preventDefault();
   };
 
-  const changeOrder = (start: number, end: number) => {
-    // let _contents = [...detailContent];
-    // let tmp = _contents[end];
-    // _contents[end] = _contents[start];
-    // _contents[start] = tmp;
-    // return _contents;
+  //item id의 index 가져오는 함수
+  const GetItemIndex = () => {
+    return String(
+      column.content.findIndex((el) => {
+        return el.id === contentData.id;
+      })
+    );
   };
 
+  //드래그 드롭
   const handleDrop = (e: React.DragEvent<HTMLInputElement>) => {
-    // const startId = Number(e.dataTransfer.getData("startContent"));
-    // const endId = detailContent.indexOf(content);
-    // console.log("fsjdhfk", changeOrder(startId, endId));
-    // const _list = [...column];
-    // const editList = {
-    //   id: today.getTime(),
-    //   title: _list[itemIndex].title,
-    //   content: changeOrder(startId, endId),
-    // };
-    // setColumn((prev) => prev.splice(itemIndex, 1, editList));
+    //상위요소로 이벤트 전파 막기
+    e.stopPropagation();
+    const startColumnId = Number(e.dataTransfer.getData("startColumnId"));
+    const startItemIndex = Number(e.dataTransfer.getData("startItemId"));
+    const endColumnId = id;
+    const endItemIndex = Number(GetItemIndex());
+    if (startColumnId === endColumnId) {
+      //같은 컬럼 내 이동
+      moveItemInSameColumn(startItemIndex, endItemIndex);
+    } else {
+      //다른 컬럼으로 이동
+      console.log(startColumnId, startItemIndex, endColumnId, endItemIndex);
+      console.log("startItem", column.content[startItemIndex]);
+      moveItemToDifferentColumn(startColumnId, startItemIndex, endItemIndex);
+    }
   };
+
   return (
     <ItemContent
-      onMouseOver={() => setIsShow(true)}
-      onMouseLeave={() => setIsShow(false)}
-      onFocus={() => setIsShow(false)}
-      isFocus={isShow}
+      onFocus={() => setIsFocus(true)}
+      onBlur={() => setIsFocus(false)}
+      isFocus={isFocus}
       draggable
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       <ItemInput value={item} onChange={handleItemInput} />
-      <EditIcon sx={{ margin: "auto", paddingRight: "5px" }} />
+      <IconButton
+        onClick={() => editItem(contentData.id, item)}
+        sx={{ padding: "0 5px" }}
+      >
+        <EditIcon />
+      </IconButton>
       <IconButton
         onClick={() => deleteItem(contentData.id)}
-        sx={{ padding: 0 }}
+        sx={{ padding: "0 5px" }}
       >
         <DeleteIcon />
       </IconButton>

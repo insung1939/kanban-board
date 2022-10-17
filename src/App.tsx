@@ -5,8 +5,8 @@ import { color } from "./styles/theme";
 import { columnState, columnIds } from "./recoil/atoms/kanban";
 import { useRecoilState, useRecoilCallback } from "recoil";
 //components
-import List from "./components/Column";
-import ListCreator from "./components/ColumnCreator";
+import Column from "./components/Column";
+import ColumnCreator from "./components/ColumnCreator";
 import { useEffect } from "react";
 
 // ---------------------------------------------------------------------
@@ -14,6 +14,19 @@ import { useEffect } from "react";
 export default function App() {
   //state
   const [idList, setIdList] = useRecoilState<number[]>(columnIds);
+
+  //default 칸반 두개 설정, 맨 처음에 idList가 없으면 컬럼 2개 생성한다(id는 각각 1,2)
+  useEffect(() => {
+    if (idList.length === 0) {
+      setIdList([new Date().getTime()]);
+      createColumn("기본 컬럼1", new Date().getTime());
+    } else if (idList.length === 1) {
+      setIdList([...idList, new Date().getTime()]);
+      createColumn("기본 컬럼2", new Date().getTime());
+    } else {
+      return;
+    }
+  }, [idList]);
 
   //컬럼 생성
   const createColumn = useRecoilCallback(
@@ -38,9 +51,9 @@ export default function App() {
       <AppTitle>Kanban Board</AppTitle>
       <BoardStyle>
         {idList.map((id) => (
-          <List key={id} id={id} deleteColumn={deleteColumn} />
+          <Column key={id} id={id} deleteColumn={deleteColumn} />
         ))}
-        <ListCreator createColumn={createColumn} />
+        <ColumnCreator createColumn={createColumn} />
       </BoardStyle>
     </div>
   );
