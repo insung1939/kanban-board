@@ -1,3 +1,4 @@
+//react
 import { useState } from "react";
 //style
 import styled from "styled-components";
@@ -13,8 +14,9 @@ import { useRecoilState } from "recoil";
 import {
   columnIds,
   columnState,
+  dragState,
   IColumnState,
-  IItem,
+  IDragState,
 } from "../recoil/atoms/kanban";
 //components
 import Item from "./Item";
@@ -29,9 +31,11 @@ export default function Column(props: IColumnProps) {
   const { id, deleteColumn } = props;
   //state
   const [column, setColumn] = useRecoilState<IColumnState>(columnState(id));
+  const [dragData] = useRecoilState<IDragState>(dragState);
+  const [dragColumn, setDragColumn] = useRecoilState<IColumnState>(
+    columnState(dragData.startColumnId)
+  );
   const [idList, setIdList] = useRecoilState<number[]>(columnIds);
-  const [dragId, setDragId] = useState<number>(0);
-  const [dragColumn, setDragColumn] = useRecoilState(columnState(1));
   //column title
   const [title, setTitle] = useState<string>(column.title);
   //item add mode
@@ -88,7 +92,6 @@ export default function Column(props: IColumnProps) {
 
   //컬럼 삭제
   const handleDeleteColumn = (id: number) => {
-    console.log("id", id);
     deleteColumn(id);
   };
 
@@ -107,7 +110,6 @@ export default function Column(props: IColumnProps) {
   //컬럼 드래그 시작
   const handleDragStart = (e: React.DragEvent<HTMLInputElement>) => {
     e.dataTransfer.setData("start", String(id));
-    console.log("column drag start");
   };
 
   //컬럼 드래그 중
@@ -118,9 +120,15 @@ export default function Column(props: IColumnProps) {
   //드래그 드롭
   const handleDrop = (e: React.DragEvent<HTMLInputElement>) => {
     const startId = Number(e.dataTransfer.getData("start"));
-    console.log("id!!!", startId, id);
     const endId = id;
-    setIdList(changeOrder(findIndex(startId), findIndex(endId), idList));
+    if (
+      startId !== undefined &&
+      startId !== 0 &&
+      endId !== undefined &&
+      endId !== 0
+    ) {
+      setIdList(changeOrder(findIndex(startId), findIndex(endId), idList));
+    }
   };
 
   //드래그 드롭 후 위치 변경 함수
@@ -138,40 +146,38 @@ export default function Column(props: IColumnProps) {
   };
 
   //같은 컬럼 내 아이템 위치 변경
-  const moveItemInSameColumn = (
-    startItemIndex: number,
-    endItemIndex: number
-  ) => {
+  const moveItemInSameColumn = (endItemIndex: number) => {
     setColumn({
       ...column,
-      content: changeOrder(startItemIndex, endItemIndex, column.content),
+      content: changeOrder(
+        dragData.startItemIndex,
+        endItemIndex,
+        column.content
+      ),
     });
   };
 
   //다른 컬럼으로 아이템 이동
-  const moveItemToDifferentColumn = (
-    startColumnId: number,
-    startItemIndex: number,
-    endItemIndex: number
-  ) => {
-    console.log("startItem", startColumnId, startItemIndex, endItemIndex);
-    setDragId(startColumnId);
-    handleDragItemChange();
-    console.log("dragId", startColumnId);
-
-    console.log("startColumn", dragColumn);
-    // setColumn({
-    //   ...column,
-    //   content: [
-    //     ...column.content.slice(0, endItemIndex),
-    //     startItem,
-    //     ...column.content.slice(endItemIndex),
-    //   ],
-    // });
+  const moveItemToDifferentColumn = (endItemIndex: number) => {
+    setDragColumn({
+      ...dragColumn,
+      content: dragColumn.content.filter(
+        (el) => el.id !== dragData.startItemId
+      ),
+    });
+    setColumn({
+      ...column,
+      content: [
+        ...column.content.slice(0, endItemIndex + 1),
+        { id: new Date().getTime(), text: dragData.startItemText },
+        ...column.content.slice(endItemIndex + 1),
+      ],
+    });
   };
 
-  const handleDragItemChange = () => {
-    console.log("dragId!!", dragId);
+  const handleMoveItem = (e: React.DragEvent<HTMLInputElement>) => {
+    if (column.id !== dragData.startColumnId)
+      moveItemToDifferentColumn(column.content.length);
   };
 
   return (
@@ -200,7 +206,7 @@ export default function Column(props: IColumnProps) {
       ))}
       {showAddInput && (
         <CreateItemBox>
-          <CreateItem onChange={handleCreateItem} />
+          <CreateItem onChange={handleCreateItem} autoFocus />
           <IconButton onClick={cancelNewItem} sx={{ padding: "0 5px" }}>
             <ClearIcon />
           </IconButton>
@@ -209,7 +215,7 @@ export default function Column(props: IColumnProps) {
           </IconButton>
         </CreateItemBox>
       )}
-      <AlignStyle>
+      <AlignStyle onDrop={handleMoveItem}>
         <IconButton
           onClick={() => setShowAddInput(true)}
           sx={{ padding: "0 5px", marginTop: "10px" }}

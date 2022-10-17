@@ -13,6 +13,13 @@ export interface IColumnState {
   content: IItem[];
 }
 
+export interface IDragState {
+  startColumnId: number;
+  startItemIndex: number;
+  startItemId: number;
+  startItemText: string;
+}
+
 //새로고침 후에도 데이터 남이있게 함
 const { persistAtom } = recoilPersist();
 
@@ -20,6 +27,18 @@ const { persistAtom } = recoilPersist();
 export const columnIds = atom<number[]>({
   key: "columnIds",
   default: [],
+  effects_UNSTABLE: [persistAtom],
+});
+
+//드래그 컬럼 id
+export const dragState = atom<IDragState>({
+  key: "dragState",
+  default: {
+    startColumnId: 0,
+    startItemIndex: 0,
+    startItemId: 0,
+    startItemText: "",
+  },
   effects_UNSTABLE: [persistAtom],
 });
 

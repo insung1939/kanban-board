@@ -15,7 +15,7 @@ export default function App() {
   //state
   const [idList, setIdList] = useRecoilState<number[]>(columnIds);
 
-  //default 칸반 두개 설정, 맨 처음에 idList가 없으면 컬럼 2개 생성한다(id는 각각 1,2)
+  //default 칸반 두개 설정, 맨 처음에 idList가 없으면 컬럼 2개 생성
   useEffect(() => {
     if (idList.length === 0) {
       setIdList([new Date().getTime()]);

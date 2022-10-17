@@ -8,10 +8,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
 //recoil
 import {
-  columnIds,
   IColumnState,
   IItem,
   columnState,
+  dragState,
+  IDragState,
 } from "../recoil/atoms/kanban";
 import { useRecoilState } from "recoil";
 
@@ -21,12 +22,8 @@ interface IItemProps {
   id: number;
   deleteItem: (id: number) => void;
   editItem: (id: number, text: string) => void;
-  moveItemInSameColumn: (startItemIndex: number, endItemIndex: number) => void;
-  moveItemToDifferentColumn: (
-    startColumnId: number,
-    stratItemIndex: number,
-    endItemIndex: number
-  ) => void;
+  moveItemInSameColumn: (endItemIndex: number) => void;
+  moveItemToDifferentColumn: (endItemIndex: number) => void;
 }
 
 interface ItemContentProps {
@@ -44,6 +41,7 @@ export default function Item(props: IItemProps) {
   } = props;
   const [isFocus, setIsFocus] = useState<boolean>(false);
   const [item, setItem] = useState<string>(contentData.text);
+  const [dragData, setDragData] = useRecoilState<IDragState>(dragState);
   const [column] = useRecoilState<IColumnState>(columnState(id));
   const handleItemInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setItem(e.target.value);
@@ -51,10 +49,14 @@ export default function Item(props: IItemProps) {
 
   //아이템 드래그 시작
   const handleDragStart = (e: React.DragEvent<HTMLInputElement>) => {
-    e.dataTransfer.setData("startColumnId", String(id));
-    e.dataTransfer.setData("startItemId", GetItemIndex());
+    setDragData({
+      ...dragData,
+      startColumnId: id,
+      startItemIndex: GetItemIndex(),
+      startItemId: contentData.id,
+      startItemText: contentData.text,
+    });
     e.stopPropagation();
-    console.log("item drag start");
   };
 
   //아이템 드래그 중
@@ -64,29 +66,21 @@ export default function Item(props: IItemProps) {
 
   //item id의 index 가져오는 함수
   const GetItemIndex = () => {
-    return String(
-      column.content.findIndex((el) => {
-        return el.id === contentData.id;
-      })
-    );
+    return column.content.findIndex((el) => {
+      return el.id === contentData.id;
+    });
   };
 
   //드래그 드롭
   const handleDrop = (e: React.DragEvent<HTMLInputElement>) => {
     //상위요소로 이벤트 전파 막기
     e.stopPropagation();
-    const startColumnId = Number(e.dataTransfer.getData("startColumnId"));
-    const startItemIndex = Number(e.dataTransfer.getData("startItemId"));
-    const endColumnId = id;
-    const endItemIndex = Number(GetItemIndex());
-    if (startColumnId === endColumnId) {
+    if (dragData.startColumnId === id) {
       //같은 컬럼 내 이동
-      moveItemInSameColumn(startItemIndex, endItemIndex);
+      moveItemInSameColumn(GetItemIndex());
     } else {
       //다른 컬럼으로 이동
-      console.log(startColumnId, startItemIndex, endColumnId, endItemIndex);
-      console.log("startItem", column.content[startItemIndex]);
-      moveItemToDifferentColumn(startColumnId, startItemIndex, endItemIndex);
+      moveItemToDifferentColumn(GetItemIndex());
     }
   };
 
@@ -100,7 +94,7 @@ export default function Item(props: IItemProps) {
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <ItemInput value={item} onChange={handleItemInput} />
+      <ItemInput value={item} onChange={handleItemInput} autoFocus />
       <IconButton
         onClick={() => editItem(contentData.id, item)}
         sx={{ padding: "0 5px" }}

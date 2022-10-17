@@ -51,6 +51,7 @@ export default function ColumnCreator({ createColumn }: IColumnCreatorProps) {
             placeholder="제목 입력..."
             onChange={handleColumnTitle}
             onKeyDown={handleEnterInput}
+            autoFocus
           />
           <div style={{ display: "flex" }}>
             <AddColumnButton onClick={handleAddColumn}>추가</AddColumnButton>
