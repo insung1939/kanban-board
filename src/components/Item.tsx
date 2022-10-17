@@ -1,3 +1,4 @@
+//react
 import { useState } from "react";
 //style
 import styled from "styled-components";
@@ -39,10 +40,13 @@ export default function Item(props: IItemProps) {
     moveItemInSameColumn,
     moveItemToDifferentColumn,
   } = props;
-  const [isFocus, setIsFocus] = useState<boolean>(false);
-  const [item, setItem] = useState<string>(contentData.text);
+  //state
   const [dragData, setDragData] = useRecoilState<IDragState>(dragState);
   const [column] = useRecoilState<IColumnState>(columnState(id));
+  //item text
+  const [item, setItem] = useState<string>(contentData.text);
+  const [isFocus, setIsFocus] = useState<boolean>(false);
+
   const handleItemInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setItem(e.target.value);
   };

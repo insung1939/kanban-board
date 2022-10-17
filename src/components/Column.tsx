@@ -21,6 +21,8 @@ import {
 //components
 import Item from "./Item";
 
+// ---------------------------------------------------------------------
+
 interface IColumnProps {
   id: number;
   deleteColumn: (id: number) => void;
@@ -32,6 +34,7 @@ export default function Column(props: IColumnProps) {
   //state
   const [column, setColumn] = useRecoilState<IColumnState>(columnState(id));
   const [dragData] = useRecoilState<IDragState>(dragState);
+  //드래그 드롭 전의 컬럼
   const [dragColumn, setDragColumn] = useRecoilState<IColumnState>(
     columnState(dragData.startColumnId)
   );
@@ -100,8 +103,6 @@ export default function Column(props: IColumnProps) {
     setTitle(e.target.value);
   };
 
-  //컬럼 제목 수정과 아이템 추가는 컬럼의 세부 항목 변경이 필요함.
-  //컬럼 제목 수정(인풋입력시 바로 반영)
   const handleSaveTitle = () => {
     setColumn({ ...column, title: title });
     alert("제목이 저장되었습니다!");
@@ -175,6 +176,7 @@ export default function Column(props: IColumnProps) {
     });
   };
 
+  //컬럼 하단 영역(삭제, 추가 버튼)으로 드래그했을 때 아이템 이동
   const handleMoveItem = (e: React.DragEvent<HTMLInputElement>) => {
     if (column.id !== dragData.startColumnId)
       moveItemToDifferentColumn(column.content.length);

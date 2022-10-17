@@ -30,7 +30,7 @@ export const columnIds = atom<number[]>({
   effects_UNSTABLE: [persistAtom],
 });
 
-//드래그 컬럼 id
+//드래그 시작을 할 때의 드래그 상태값
 export const dragState = atom<IDragState>({
   key: "dragState",
   default: {

@@ -1,3 +1,5 @@
+//react
+import { useEffect } from "react";
 //style
 import styled from "styled-components";
 import { color } from "./styles/theme";
@@ -7,7 +9,6 @@ import { useRecoilState, useRecoilCallback } from "recoil";
 //components
 import Column from "./components/Column";
 import ColumnCreator from "./components/ColumnCreator";
-import { useEffect } from "react";
 
 // ---------------------------------------------------------------------
 
